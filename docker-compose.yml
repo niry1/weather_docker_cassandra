@@ -1,0 +1,82 @@
+version: '3'
+services:
+  cassandra:
+    image: docker.io/bitnami/cassandra:3-debian-10
+    ports:
+      - 7000:7000
+      - 9042:9042
+    volumes:
+      - cassandra_data:/bitnami
+    environment:
+      - CASSANDRA_SEEDS=cassandra,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+    healthcheck:
+      test: cqlsh -u cassandra -p cassandra 
+      interval: 5s
+      timeout: 10s
+      retries: 6
+  cassandra2:
+    image: docker.io/bitnami/cassandra:3-debian-10
+    ports:
+      - 7001:7000
+      - 9043:9042
+    volumes:
+      - cassandra2_data:/bitnami
+    environment:
+      - CASSANDRA_SEEDS=cassandra,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+      # A web based interface for managing your docker containers.
+    healthcheck:
+      test: cqlsh -u cassandra -p cassandra
+      interval: 5s
+      timeout: 10s
+      retries: 6 
+  cassandra3:
+    image: docker.io/bitnami/cassandra:3-debian-10
+    ports:
+      - 7002:7000
+      - 9044:9042
+    volumes:
+      - cassandra3_data:/bitnami
+    environment:
+      - CASSANDRA_SEEDS=cassandra,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+      # A web based interface for managing your docker containers.
+    healthcheck:
+      test: cqlsh -u cassandra -p cassandra
+      interval: 5s
+      timeout: 10s
+      retries: 6 
+  weather:
+    build: ./docker_weather
+    image: weather:latest
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      cassandra2:
+        condition: service_healthy
+      cassandra3:
+        condition: service_healthy         
+volumes:
+  cassandra_data:
+    driver: local
+  cassandra2_data:
+    driver: local
+  cassandra3_data:
+    driver: local
